@@ -187,7 +187,9 @@ public class PreferencesProviderWrapper {
                 ni != null &&
                 ni.getType() != ConnectivityManager.TYPE_MOBILE
                 && ni.getType() != ConnectivityManager.TYPE_WIFI) {
-            return ni.isConnected();
+            return ni.getType() != ConnectivityManager.TYPE_VPN
+                ? ni.isConnected() // how to determine weird networks like WIMAX
+                : ni.getState() == NetworkInfo.State.CONNECTED; // the required VPN state
         }
         return false;
     }
@@ -250,6 +252,7 @@ public class PreferencesProviderWrapper {
      */
     public boolean isValidConnectionForIncoming() {
         NetworkInfo ni = connectivityManager.getActiveNetworkInfo();
+        if (ni == null) ni = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN);
         return isValidConnectionFor(ni, "in");
     }
 

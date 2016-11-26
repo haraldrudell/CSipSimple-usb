@@ -212,7 +212,7 @@ public class DynamicReceiver4 extends BroadcastReceiver {
     /**
      * Treat the fact that the connectivity has changed
      * @param info Network info
-     * @param incomingOnly start only if for outgoing 
+     * @param isSticky
      * @throws SameThreadException
      */
     private void onConnectivityChanged(NetworkInfo info, boolean isSticky) throws SameThreadException {
@@ -226,9 +226,14 @@ public class DynamicReceiver4 extends BroadcastReceiver {
                 !info.getTypeName().equals(mNetworkType)) {
             ConnectivityManager cm = (ConnectivityManager) service.getSystemService(Context.CONNECTIVITY_SERVICE);
             info = cm.getActiveNetworkInfo();
+            if (info == null) info = cm.getNetworkInfo(ConnectivityManager.TYPE_VPN);
         }
 
-        boolean connected = (info != null && info.isConnected() && service.isConnectivityValid());
+        boolean connected = info != null &&
+            (info.getType() != ConnectivityManager.TYPE_VPN
+                ? info.isConnected()
+                : info.getState() == NetworkInfo.State.CONNECTED) &&
+            service.isConnectivityValid();
         String networkType = connected ? info.getTypeName() : "null";
         String currentRoutes = dumpRoutes();
         String oldRoutes;
